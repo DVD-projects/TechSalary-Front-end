@@ -1,9 +1,6 @@
 "use client"
 
-import React from "react"
-
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import React, { useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,7 +16,6 @@ import { DollarSign, LogIn, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 
 export default function LoginPage() {
-  const router = useRouter()
   const { login } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -38,13 +34,18 @@ export default function LoginPage() {
       return
     }
 
-    const success = await login(email, password)
-    if (success) {
-      router.push("/salaries")
-    } else {
-      setError("Invalid credentials. Please try again.")
+    try {
+      await login({ email, password })
+      // Redirect is handled inside login(), or you can do it here if login() didn't redirect
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError("Invalid credentials. Please try again.")
+      }
+    } finally {
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }
 
   return (
@@ -121,6 +122,15 @@ export default function LoginPage() {
             </form>
 
             <div className="mt-6 text-center text-sm text-muted-foreground">
+              Don&apos;t have an account?{" "}
+              <Link href="/register" className="font-medium text-primary hover:underline">
+                Sign up
+              </Link>
+            </div>
+
+            <div className="my-4 border-t border-border" />
+
+            <div className="text-center text-xs text-muted-foreground">
               <p>
                 Login is only required for community actions like voting and
                 reporting. You can{" "}
@@ -136,10 +146,6 @@ export default function LoginPage() {
             </div>
           </CardContent>
         </Card>
-
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          This is a demo. Enter any email and password to sign in.
-        </p>
       </div>
     </div>
   )
