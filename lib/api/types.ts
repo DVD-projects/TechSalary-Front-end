@@ -47,3 +47,18 @@ export interface UpdateProfileRequest {
   //password?: string
   is_active?: boolean
 }
+
+// Admin User Management
+export interface PaginatedUsersResponse {
+  total: number
+  page: number
+  size: number
+  items: User[]
+}
+
+export interface UpdateUserPayload {
+  first_name: string
+  last_name: string
+  email: string
+  is_active: boolean
+}
