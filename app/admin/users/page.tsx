@@ -38,6 +38,7 @@ export default function UserManagementPage() {
     const { toast } = useToast()
 
     const [users, setUsers] = useState<User[]>([])
+    const [user, setUser] = useState<User | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [search, setSearch] = useState("")
 
@@ -45,6 +46,14 @@ export default function UserManagementPage() {
     const [page, setPage] = useState(1)
     const [total, setTotal] = useState(0)
     const limit = 10
+
+    const logout = () => {
+        localStorage.removeItem("token")
+        localStorage.removeItem("userData")
+        setUser(null)
+        router.push("/login")
+        window.location.reload() 
+    }
 
     // Fetch Users Function
     const fetchUsers = useCallback(async () => {
@@ -55,7 +64,7 @@ export default function UserManagementPage() {
             setUsers(data.items)
             setTotal(data.total)
         } catch (error) {
-            router.push("/login")
+            logout()
             
             toast({
                 title: "Error",

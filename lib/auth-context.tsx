@@ -75,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("userData")
     setUser(null)
     router.push("/login")
+    window.location.reload() 
   }
 
   return (

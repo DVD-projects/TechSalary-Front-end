@@ -17,11 +17,13 @@ import {
 import { UserCog, Save, Loader2, ArrowLeft } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import Link from "next/link"
+import { User } from "@/lib/api/types"
 
 export default function ProfilePage() {
 
     const router = useRouter()
     const { toast } = useToast()
+    const [user, setUser] = useState<User | null>(null)
 
     const [isSaving, setIsSaving] = useState(false)
 
@@ -57,7 +59,7 @@ export default function ProfilePage() {
                 console.error("Failed to parse user data", e)
             }
         } else {
-            router.push("/login")
+            logout()
         }
     }, [router])
 
@@ -67,6 +69,14 @@ export default function ProfilePage() {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target
         setFormData((prev) => ({ ...prev, [id]: value }))
+    }
+
+    const logout = () => {
+        localStorage.removeItem("token")
+        localStorage.removeItem("userData")
+        setUser(null)
+        router.push("/login")
+        window.location.reload() 
     }
 
     async function handleSubmit(e: React.FormEvent) {
@@ -107,6 +117,7 @@ export default function ProfilePage() {
                     variant: "destructive",
                 })
 
+                localStorage.clear()
                 router.push("/login")
             }
         } finally {

@@ -110,7 +110,7 @@ export function SiteHeader() {
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
-              <Shield className="h-4 w-4" /> {/* Import Shield from lucide-react */}
+              <Shield className="h-4 w-4" />
               User Management
             </Link>
           )}
