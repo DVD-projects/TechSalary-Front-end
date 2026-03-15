@@ -20,15 +20,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
+  const SESSION_MS = 20 * 60 * 1000 // 20 minutes
 
   // Initialize state from LocalStorage on mount
   useEffect(() => {
     const storedUser = localStorage.getItem("userData")
     const token = localStorage.getItem("token")
-    if (storedUser && token) {
+    const loginTime = localStorage.getItem("loginTime")
+    const now = Date.now()
+    const isSessionValid =
+      loginTime && now - Number(loginTime) < SESSION_MS
+
+    if (storedUser && token && isSessionValid) {
       setUser(JSON.parse(storedUser))
+    } else {
+      // Expired session cleanup
+      localStorage.removeItem("token")
+      localStorage.removeItem("userData")
+      localStorage.removeItem("loginTime")
     }
     setIsLoading(false)
+  }, [])
+
+  // Auto-logout when session window passes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const loginTime = localStorage.getItem("loginTime")
+      if (!loginTime) return
+      const now = Date.now()
+      if (now - Number(loginTime) >= SESSION_MS) {
+        logout()
+      }
+    }, 60_000) // check every minute
+
+    return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const login = async (data: LoginRequest) => {
@@ -39,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Save to storage
       localStorage.setItem("token", response.access_token)
       localStorage.setItem("userData", JSON.stringify(response.user))
+      localStorage.setItem("loginTime", String(Date.now()))
 
       // Update State
       setUser(response.user)
@@ -59,6 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Auto-login after register
       localStorage.setItem("token", response.access_token)
       localStorage.setItem("userData", JSON.stringify(response.user))
+      localStorage.setItem("loginTime", String(Date.now()))
 
       setUser(response.user)
 
@@ -73,6 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     localStorage.removeItem("token")
     localStorage.removeItem("userData")
+    localStorage.removeItem("loginTime")
     setUser(null)
     router.push("/login")
     window.location.reload() 
