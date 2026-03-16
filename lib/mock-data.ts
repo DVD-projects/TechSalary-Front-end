@@ -14,6 +14,7 @@ export interface SalaryEntry {
   submittedAt: string
   upvotes: number
   downvotes: number
+  status?: "PENDING" | "APPROVED" | "REJECTED" | "REPORTED"
   isVerified: boolean
   techStack: string[]
   employmentType: "Full-time" | "Part-time" | "Contract" | "Freelance"
