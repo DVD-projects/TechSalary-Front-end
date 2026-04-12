@@ -415,47 +415,6 @@ export default function StatsPage() {
               </CardContent>
             </Card>
 
-            {/* Remote Distribution */}
-            <Card className="border-border">
-              <CardHeader>
-                <CardTitle className="text-foreground">
-                  Work Model Distribution
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={remoteDistribution}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
-                        paddingAngle={3}
-                        dataKey="value"
-                        label={({ name, percent }) =>
-                          `${name} ${(percent * 100).toFixed(0)}%`
-                        }
-                      >
-                        {remoteDistribution.map((_, index) => (
-                          <Cell
-                            key={`cell-${
-                              // biome-ignore lint/suspicious/noArrayIndexKey: chart cells
-                              index
-                            }`}
-                            fill={CHART_COLORS[index % CHART_COLORS.length]}
-                          />
-                        ))}
-                      </Pie>
-                      <Legend />
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* By Role */}
             <Card className="border-border">
               <CardHeader>
