@@ -30,6 +30,11 @@ export default function SalariesPage() {
   const [status, setStatus] = useState(ALL_VALUE)
   const [showFilters, setShowFilters] = useState(false)
   const [sortBy, setSortBy] = useState<"newest" | "highest">("newest")
+  const [page, setPage] = useState(1)
+  const [limit] = useState(10)
+  const [total, setTotal] = useState(0)
+  const [locations, setLocations] = useState<string[]>([])
+  const [companies, setCompanies] = useState<string[]>([])
 
   useEffect(() => {
     async function loadSalaries() {
@@ -43,6 +48,8 @@ export default function SalariesPage() {
         if (company !== ALL_VALUE) params.append("company", company)
         if (status !== ALL_VALUE) params.append("status", status)
         if (sortBy) params.append("sortBy", sortBy)
+        params.append("page", page.toString())
+        params.append("limit", limit.toString())
 
         const response = await fetch(`${API_BASE}/search?${params.toString()}`, { cache: "no-store" })
 
@@ -51,7 +58,8 @@ export default function SalariesPage() {
         }
 
         const data = await response.json()
-        setSalaries(data)
+        setSalaries(data.items)
+        setTotal(data.total)
       } catch (err) {
         setError("Failed to load salaries")
       } finally {
@@ -60,15 +68,39 @@ export default function SalariesPage() {
     }
 
     loadSalaries()
+  }, [appliedSearch, location, company, status, sortBy, page])
+
+useEffect(() => {
+  async function loadFilters() {
+    try {
+      const res = await fetch(`${API_BASE}/filters`)
+
+      if (!res.ok) throw new Error()
+
+      const data = await res.json()
+
+      setLocations(data.locations || [])
+      setCompanies(data.companies || [])
+    } catch (err) {
+      console.error("Failed to load filters")
+    }
+  }
+
+  loadFilters()
+}, [])
+
+
+  useEffect(() => {
+    setPage(1)
   }, [appliedSearch, location, company, status, sortBy])
 
-  const locations = useMemo(() => {
-    return Array.from(new Set(salaries.map((s) => s.location).filter(Boolean)))
-  }, [salaries])
-
-  const companies = useMemo(() => {
-    return Array.from(new Set(salaries.map((s) => s.company).filter(Boolean)))
-  }, [salaries])
+//   const locations = useMemo(() => {
+//     return Array.from(new Set(salaries.map((s) => s.location).filter(Boolean)))
+//   }, [salaries])
+//
+//   const companies = useMemo(() => {
+//     return Array.from(new Set(salaries.map((s) => s.company).filter(Boolean)))
+//   }, [salaries])
 
 //   const filtered = useMemo(() => {
 //     let result = salaries
@@ -135,7 +167,7 @@ export default function SalariesPage() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search by job title, company, or location..."
+              placeholder="Search by job title, company, location or years of experience..."
               className="pl-10"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -264,7 +296,8 @@ export default function SalariesPage() {
 
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Showing {salaries.length} of {salaries.length} entries
+          Showing {(page - 1) * limit + 1} -{" "}
+          {Math.min(page * limit, total)} of {total} entries
         </p>
       </div>
 
@@ -298,6 +331,29 @@ export default function SalariesPage() {
               </Button>
             </div>
           )}
+            <div className="mt-6 flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Page {page} of {Math.ceil(total / limit)}
+              </p>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  disabled={page === 1}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  Previous
+                </Button>
+
+                <Button
+                  variant="outline"
+                  disabled={page * limit >= total}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
         </div>
       )}
     </div>
