@@ -17,13 +17,14 @@ import { Search, SlidersHorizontal, X, RotateCcw } from "lucide-react"
 
 const ALL_VALUE = "__all__"
 const API_BASE =
-  process.env.NEXT_PUBLIC_SALARY_API_URL || "http://localhost:8010/api/v1/salary"
+  process.env.NEXT_PUBLIC_SALARY_API_URL || "http://localhost:8000/api/v1/salary"
 
 export default function SalariesPage() {
   const [salaries, setSalaries] = useState<SalaryEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [search, setSearch] = useState("")
+  const [appliedSearch, setAppliedSearch] = useState("")
   const [location, setLocation] = useState(ALL_VALUE)
   const [company, setCompany] = useState(ALL_VALUE)
   const [status, setStatus] = useState(ALL_VALUE)
@@ -34,7 +35,16 @@ export default function SalariesPage() {
     async function loadSalaries() {
       try {
         setLoading(true)
-        const response = await fetch(`${API_BASE}/all`, { cache: "no-store" })
+
+        const params = new URLSearchParams()
+
+        if (appliedSearch) params.append("search", appliedSearch)
+        if (location !== ALL_VALUE) params.append("location", location)
+        if (company !== ALL_VALUE) params.append("company", company)
+        if (status !== ALL_VALUE) params.append("status", status)
+        if (sortBy) params.append("sortBy", sortBy)
+
+        const response = await fetch(`${API_BASE}/search?${params.toString()}`, { cache: "no-store" })
 
         if (!response.ok) {
           throw new Error("Failed to load salaries")
@@ -50,7 +60,7 @@ export default function SalariesPage() {
     }
 
     loadSalaries()
-  }, [])
+  }, [appliedSearch, location, company, status, sortBy])
 
   const locations = useMemo(() => {
     return Array.from(new Set(salaries.map((s) => s.location).filter(Boolean)))
@@ -60,42 +70,42 @@ export default function SalariesPage() {
     return Array.from(new Set(salaries.map((s) => s.company).filter(Boolean)))
   }, [salaries])
 
-  const filtered = useMemo(() => {
-    let result = salaries
-
-    if (search) {
-      const q = search.toLowerCase()
-      result = result.filter(
-        (s) =>
-          s.job_title.toLowerCase().includes(q) ||
-          s.company.toLowerCase().includes(q) ||
-          s.location.toLowerCase().includes(q)
-      )
-    }
-
-    if (location !== ALL_VALUE) {
-      result = result.filter((s) => s.location === location)
-    }
-
-    if (company !== ALL_VALUE) {
-      result = result.filter((s) => s.company === company)
-    }
-
-    if (status !== ALL_VALUE) {
-      result = result.filter((s) => s.status === status)
-    }
-
-    if (sortBy === "newest") {
-      result = [...result].sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      )
-    } else {
-      result = [...result].sort((a, b) => b.salary_amount - a.salary_amount)
-    }
-
-    return result
-  }, [salaries, search, location, company, status, sortBy])
+//   const filtered = useMemo(() => {
+//     let result = salaries
+//
+//     if (search) {
+//       const q = search.toLowerCase()
+//       result = result.filter(
+//         (s) =>
+//           s.job_title.toLowerCase().includes(q) ||
+//           s.company.toLowerCase().includes(q) ||
+//           s.location.toLowerCase().includes(q)
+//       )
+//     }
+//
+//     if (location !== ALL_VALUE) {
+//       result = result.filter((s) => s.location === location)
+//     }
+//
+//     if (company !== ALL_VALUE) {
+//       result = result.filter((s) => s.company === company)
+//     }
+//
+//     if (status !== ALL_VALUE) {
+//       result = result.filter((s) => s.status === status)
+//     }
+//
+//     if (sortBy === "newest") {
+//       result = [...result].sort(
+//         (a, b) =>
+//           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+//       )
+//     } else {
+//       result = [...result].sort((a, b) => b.salary_amount - a.salary_amount)
+//     }
+//
+//     return result
+//   }, [salaries, search, location, company, status, sortBy])
 
   const activeFilters = [location, company, status].filter(
     (v) => v !== ALL_VALUE
@@ -103,6 +113,7 @@ export default function SalariesPage() {
 
   function clearFilters() {
     setSearch("")
+    setAppliedSearch("")
     setLocation(ALL_VALUE)
     setCompany(ALL_VALUE)
     setStatus(ALL_VALUE)
@@ -128,10 +139,18 @@ export default function SalariesPage() {
               className="pl-10"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                  if (e.key === "Enter"){
+                      setAppliedSearch(search)
+                  }
+              }}
             />
             {search && (
               <button
-                onClick={() => setSearch("")}
+                onClick={() => {
+                    setSearch("")
+                    setAppliedSearch("")
+                }}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 aria-label="Clear search"
               >
@@ -141,6 +160,9 @@ export default function SalariesPage() {
           </div>
 
           <div className="flex gap-2">
+            <Button onClick={()=> setAppliedSearch(search)}>
+                Search
+            </Button>
             <Button
               variant="outline"
               className="gap-2 bg-transparent"
@@ -242,7 +264,7 @@ export default function SalariesPage() {
 
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Showing {filtered.length} of {salaries.length} entries
+          Showing {salaries.length} of {salaries.length} entries
         </p>
       </div>
 
@@ -256,8 +278,8 @@ export default function SalariesPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          {filtered.length > 0 ? (
-            filtered.map((entry) => <SalaryCard key={entry.id} entry={entry} />)
+          {salaries.length > 0 ? (
+            salaries.map((entry) => <SalaryCard key={entry.id} entry={entry} />)
           ) : (
             <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16">
               <Search className="mb-4 h-10 w-10 text-muted-foreground" />
