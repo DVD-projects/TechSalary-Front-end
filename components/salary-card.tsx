@@ -221,7 +221,7 @@ export function SalaryCard({ entry }: SalaryCardProps) {
                 {/* Anonymous Flag */}
                 <span className="flex items-center gap-1">
                   <Briefcase className="h-3.5 w-3.5" />
-                  {entry.is_anonymous ? "Anonymous submission" : "Named company"}
+                  {entry.is_anonymous ? "Anonymous submission" : "By Signed In user"}
                 </span>
               </div>
 
