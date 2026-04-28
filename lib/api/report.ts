@@ -14,7 +14,7 @@ export interface ReportResponse {
   [key: string]: unknown
 }
 
-const API_BASE_URL = "http://127.0.0.1:8001"
+const API_BASE_URL = "http://127.0.0.1:8000/api/v1"
 
 class BaseReportService {
   protected static getHeaders() {
@@ -32,6 +32,15 @@ class BaseReportService {
 }
 
 export class ReportService extends BaseReportService {
+  static async report(salaryId: number | string, reason: string) {
+    const data = await this.createReport(salaryId, reason)
+
+    return {
+      success: true,
+      data,
+    }
+  }
+
   static async createReport(
     salaryId: number | string,
     reason: string

@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 
 import { Card, CardContent } from "@/components/ui/card"
@@ -95,6 +95,37 @@ export function SalaryCard({ entry }: SalaryCardProps) {
   const [reportText, setReportText] = useState("")
   const [reported, setReported] = useState(false)
 
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setUserVote(null)
+      setReported(false)
+      return
+    }
+
+    let active = true
+
+    VoteService.getUserInteractionState(entry.id)
+      .then((state) => {
+        if (!active) return
+
+        setVotes({
+          up: state.up_votes,
+          down: state.down_votes,
+        })
+        setUserVote(state.user_vote?.toLowerCase() as VoteType | null)
+        setReported(state.reported)
+      })
+      .catch(() => {
+        if (!active) return
+        setUserVote(null)
+        setReported(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [entry.id, isLoggedIn])
+
   // Handle Votes
   async function handleVote(type: VoteType) {
     if (!isLoggedIn) return
@@ -117,6 +148,7 @@ export function SalaryCard({ entry }: SalaryCardProps) {
     if (res.success) {
       setReported(true)
       setReportOpen(false)
+      setReportText("")
     }
   }
 
@@ -255,40 +287,44 @@ export function SalaryCard({ entry }: SalaryCardProps) {
                 Submitted on {new Date(entry.created_at).toLocaleDateString()}
               </span>
 
-              {/* VOTING */}
-              <div className="flex items-center gap-3 mt-2">
-                <Button
-                  size="sm"
-                  variant={userVote === "up" ? "default" : "outline"}
-                  onClick={() => handleVote("up")}
-                >
-                  <ThumbsUp className="h-4 w-4 mr-1" /> {votes.up}
-                </Button>
+              {isLoggedIn && (
+                <div className="flex items-center gap-3 mt-2">
+                  <Button
+                    size="sm"
+                    variant={userVote === "up" ? "default" : "outline"}
+                    onClick={() => handleVote("up")}
+                  >
+                    <ThumbsUp className="h-4 w-4 mr-1" /> {votes.up}
+                  </Button>
 
-                <Button
-                  size="sm"
-                  variant={userVote === "down" ? "default" : "outline"}
-                  onClick={() => handleVote("down")}
-                >
-                  <ThumbsDown className="h-4 w-4 mr-1" /> {votes.down}
-                </Button>
+                  <Button
+                    size="sm"
+                    variant={userVote === "down" ? "default" : "outline"}
+                    onClick={() => handleVote("down")}
+                  >
+                    <ThumbsDown className="h-4 w-4 mr-1" /> {votes.down}
+                  </Button>
 
-                {/* REPORT BUTTON */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setReportOpen(true)}
-                >
-                  <Flag className="h-4 w-4" />
-                </Button>
-              </div>
+                  <Button
+                    variant={reported ? "destructive" : "outline"}
+                    size="sm"
+                    disabled={reported}
+                    onClick={() => {
+                      if (!reported) setReportOpen(true)
+                    }}
+                    className={reported ? "opacity-100" : undefined}
+                  >
+                    <Flag className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* REPORT DIALOG */}
-      <Dialog open={reportOpen} onOpenChange={setReportOpen}>
+      <Dialog open={reportOpen} onOpenChange={(open) => setReportOpen(reported ? false : open)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Report Salary Entry</DialogTitle>
