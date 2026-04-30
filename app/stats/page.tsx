@@ -29,7 +29,7 @@ import {
     Calculator,
 } from "lucide-react"
 
-const API_BASE_URL = "http://localhost:8000"
+const API_BASE_URL = "https://20.197.82.255.nip.io"
 const ALL_VALUE = "__all__"
 
 type FiltersResponse = {

@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/card"
 
 const API_BASE =
-  process.env.NEXT_PUBLIC_SALARY_API_URL || "http://localhost:8010/api/v1/salary"
+  process.env.NEXT_PUBLIC_SALARY_API_URL || "https://20.197.82.255.nip.io/api/v1/salary"
 
 export function SalarySubmissionForm() {
   const [loading, setLoading] = useState(false)

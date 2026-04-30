@@ -17,7 +17,7 @@ import { Search, SlidersHorizontal, X, RotateCcw } from "lucide-react"
 
 const ALL_VALUE = "__all__"
 const API_BASE =
-  process.env.NEXT_PUBLIC_SALARY_API_URL || "http://localhost:8000/api/v1"
+  process.env.NEXT_PUBLIC_SALARY_API_URL || "https://20.197.82.255.nip.io/api/v1"
 
 export default function SalariesPage() {
   const [salaries, setSalaries] = useState<SalaryEntry[]>([])

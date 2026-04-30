@@ -14,7 +14,7 @@ export interface ReportResponse {
   [key: string]: unknown
 }
 
-const API_BASE_URL = "http://127.0.0.1:8000/api/v1"
+const API_BASE_URL = "https://20.197.82.255.nip.io/api/v1"
 
 class BaseReportService {
   protected static getHeaders() {
